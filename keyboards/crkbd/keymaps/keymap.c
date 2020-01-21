@@ -1,20 +1,31 @@
 #include "crkbd.h"
 #include "bootloader.h"
 #include "action_layer.h"
+#include "action_util.h"
 #include "eeconfig.h"
 #ifdef PROTOCOL_LUFA
 #include "lufa.h"
 #include "split_util.h"
 #endif
 #include "LUFA/Drivers/Peripheral/TWI.h"
-
-#ifdef OLED_DRIVER_ENABLE
-#    define KEYLOGGER_LENGTH 5
-
-void add_keylog(uint16_t keycode);
+#ifdef SSD1306OLED
+  #include "ssd1306.h"
 #endif
 
+#include "../lib/mode_icon_reader.c"
+#include "../lib/layer_state_reader.c"
+#include "../lib/host_led_state_reader.c"
+#include "../lib/logo_reader.c"
+#include "../lib/keylogger.c"
+#include "../lib/timelogger.c"
+
 extern keymap_config_t keymap_config;
+
+#ifdef RGBLIGHT_ENABLE
+//Following line allows macro to read current RGB settings
+extern rgblight_config_t rgblight_config;
+#endif
+
 extern uint8_t is_master;
 
 // Each layer gets a name for readability, which is then used in the keymap matrix below.
@@ -83,9 +94,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //,-----------------------------------------.                ,-----------------------------------------.
       TAB,      Q,     W,     E,     R,     T,                      Y,     U,     I,     O,     P,  BSPC,\
   //|------+------+------+------+------+------|                |------+------+------+------+------+------|
-      SFT_T(KC_ESC),SFT_T(KC_A), S, D,F,  G,                      H,     J,     K,     L,  SFT_T(KC_SCLN),  SFT_T(KC_QUOTE),
+      SFT_T(KC_ESC),  SFT_T(KC_A), S, D,F,  G,                      H,     J,     K,     L,  SFT_T(KC_SCLN),  SFT_T(KC_QUOTE),\
   //|------+------+------+------+------+------|                |------+------+------+------+------+------|
-      LCTL,     Z,     X,     C,     V,     B,                      N,     M,  COMM,   DOT,  SLSH,  RSFT,\
+      LCTL,     CTL_T(KC_Z),     X,     C,     V,     B,                      N,     M,  COMM,   DOT,  SLSH,  RSFT,\
   //|------+------+------+------+------+------+------|  |------+------+------+------+------+------+------|
                                   RGUI, SPC, LOWER,      RAISE, ENT,  MO(_EXTRA) \
                               //`--------------------'  `--------------------'
@@ -95,7 +106,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //,-----------------------------------------.                                  ,-----------------------------------------.
       TAB,      1,     2,     3,     4,     5,                                        6,     7,     8,     9,     0,  BSPC,\
   //|--------+------+------+------+------+------|                                  |------+------+------+------+------+------|
-      SFT_T(KC_ESC),    VIM_PREV_TAB,  VIM_NEW_TAB, VIM_H_SPLIT,  VIM_V_SPLIT,  VIM_SAVE, VIM_PANE_LEFT,  VIM_PANE_DOWN,  VIM_PANE_UP,  VIM_PANE_RIGHT,  VIM_NEXT_TAB, XX,\
+      ESC,    VIM_PREV_TAB,  VIM_NEW_TAB, VIM_H_SPLIT,  VIM_V_SPLIT,  VIM_SAVE, VIM_PANE_LEFT,  VIM_PANE_DOWN,  VIM_PANE_UP,  VIM_PANE_RIGHT,  VIM_NEXT_TAB, XX,\
   //|--------+------+------+------+------+------|                                  |------+------+------+------+------+------|
       LCTL,   TMUX_PREV_TAB, TMUX_ZOOM,   TMUX_H_SPLIT, TMUX_V_SPLIT, TMUX_EDIT_MODE,  TMUX_PANE_LEFT, TMUX_PANE_DOWN, TMUX_PANE_UP, TMUX_PANE_RIGHT, TMUX_NEXT_TAB, XX,\
   //|------+------+------+------+------+------+------|  |------+------+------+------+------+------+------|
@@ -107,7 +118,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //,-----------------------------------------.                ,-----------------------------------------.
       TAB,  XX   ,  AT  , LCBR , RCBR , PIPE ,                 GRAVE, EXCLAIM, MINUS,  EQUAL,  XX, BSPC, \
   //|------------+------+------+------+------|                |------+------+------+------+------+------|
-      SFT_T(KC_ESC), LSFT, TILD,  LPRN, RPRN, UNDS,                              LEFT,  DOWN,  UP,    RGHT,  QUOTE , XX, \
+      ESC, XX, TILD,  LPRN, RPRN, UNDS,                              LEFT,  DOWN,  UP,    RGHT,  QUOTE , XX, \
   //|------------+------+------+------+------|                |------+------+------+------+------+------|
       LCTL, ASTERISK , HASH, LBRC, RBRC, AMPR,                          PERCENT, BSLASH,  DOLLAR, PLUS ,  COLON,XX, \
   //|------+------+------+------+------+------+------|  |------+------+------+------+------+------+------|
@@ -133,20 +144,80 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //|------+------+------+------+------+------|                |------+------+------+------+------+------|
       XX   ,  F11 ,  F12 , _MUTE, _VOLDOWN, _VOLUP,                 MS_L,  MS_D, MS_U, MS_R,  WH_U, XX,\
   //|------+------+------+------+------+------|                |------+------+------+------+------+------|
-      XX   , XX   ,   XX ,  XX  ,  XX  ,  XX  ,                  MRWD, MFFD, MPLY, SCREENSHOT , WH_D, XX,\
+      XX   , XX   ,   XX ,  XX  ,  XX  ,  XX  ,                  MPRV, MNXT, MPLY, SCREENSHOT , WH_D, XX,\
   //|------+------+------+------+------+------+------|  |------+------+------+------+------+------+------|
                                  RST,      XX,   XX,        XX,     XX,    XX \
                               //`--------------------'  `--------------------'
   )
 };
 
+int RGB_current_mode;
+
 void persistent_default_layer_set(uint16_t default_layer) {
   eeconfig_update_default_layer(default_layer);
   default_layer_set(default_layer);
 }
 
+// Setting ADJUST layer RGB back to default
+void update_tri_layer_RGB(uint8_t layer1, uint8_t layer2, uint8_t layer3) {
+  if (IS_LAYER_ON(layer1) && IS_LAYER_ON(layer2)) {
+    layer_on(layer3);
+  } else {
+    layer_off(layer3);
+  }
+}
+
+void matrix_init_user(void) {
+    #ifdef RGBLIGHT_ENABLE
+      RGB_current_mode = rgblight_config.mode;
+    #endif
+    //SSD1306 OLED init, make sure to add #define SSD1306OLED in config.h
+    #ifdef SSD1306OLED
+        TWI_Init(TWI_BIT_PRESCALE_1, TWI_BITLENGTH_FROM_FREQ(1, 800000));
+        iota_gfx_init(!has_usb());   // turns on the display
+    #endif
+}
+
+//SSD1306 OLED update loop, make sure to add #define SSD1306OLED in config.h
+#ifdef SSD1306OLED
+
+void matrix_scan_user(void) {
+   iota_gfx_task();
+}
+
+void matrix_render_user(struct CharacterMatrix *matrix) {
+  if (is_master) {
+    matrix_write_ln(matrix, read_layer_state());
+    matrix_write_ln(matrix, read_keylog());
+    matrix_write_ln(matrix, read_keylogs());
+    //matrix_write_ln(matrix, read_mode_icon(keymap_config.swap_lalt_lgui));
+    //matrix_write_ln(matrix, read_host_led_state());
+    //matrix_write_ln(matrix, read_timelog());
+  } else {
+    matrix_write(matrix, read_logo());
+  }
+}
+
+void matrix_update(struct CharacterMatrix *dest, const struct CharacterMatrix *source) {
+  if (memcmp(dest->display, source->display, sizeof(dest->display))) {
+    memcpy(dest->display, source->display, sizeof(dest->display));
+    dest->dirty = true;
+  }
+}
+
+void iota_gfx_task_user(void) {
+  struct CharacterMatrix matrix;
+  matrix_clear(&matrix);
+  matrix_render_user(&matrix);
+  matrix_update(&display, &matrix);
+}
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+  if (record->event.pressed) {
+    set_keylog(keycode, record);
+    set_timelog();
+  }
+
   switch (keycode) {
     case QWERTY:
       if (record->event.pressed) {
@@ -157,20 +228,20 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     case LOWER:
       if (record->event.pressed) {
         layer_on(_LOWER);
-        update_tri_layer(_LOWER, _RAISE, _ADJUST);
+        update_tri_layer_RGB(_LOWER, _RAISE, _ADJUST);
       } else {
         layer_off(_LOWER);
-        update_tri_layer(_LOWER, _RAISE, _ADJUST);
+        update_tri_layer_RGB(_LOWER, _RAISE, _ADJUST);
       }
       return false;
       break;
     case RAISE:
       if (record->event.pressed) {
         layer_on(_RAISE);
-        update_tri_layer(_LOWER, _RAISE, _ADJUST);
+        update_tri_layer_RGB(_LOWER, _RAISE, _ADJUST);
       } else {
         layer_off(_RAISE);
-        update_tri_layer(_LOWER, _RAISE, _ADJUST);
+        update_tri_layer_RGB(_LOWER, _RAISE, _ADJUST);
       }
       return false;
       break;
@@ -386,72 +457,4 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   return true;
 }
 
-/////////////////
-// OLED STUFF
-/////////////////
-
-void render_mod_status(uint8_t modifiers) {
-    oled_write_P(PSTR("Sft"), (modifiers & MOD_MASK_SHIFT));
-    oled_write_P(PSTR(" "), false);
-    oled_write_P(PSTR("Ctl"), (modifiers & MOD_MASK_CTRL));
-    oled_write_P(PSTR(" "), false);
-    oled_write_P(PSTR("Alt"), (modifiers & MOD_MASK_ALT));
-    oled_write_P(PSTR(" "), false);
-    oled_write_P(PSTR("GUI"), (modifiers & MOD_MASK_GUI));
-}
-
-
-static void render_status(void){
-  switch (get_highest_layer(layer_state)) {
-    case 0:
-      oled_write_P(PSTR("<< QWERTY >>"), false);
-      break;
-    case 2:
-      oled_write_P(PSTR("<< LOWER >>"), false);
-      break;
-    case 3:
-      oled_write_P(PSTR("<< RAISE >>"), false);
-      break;
-    case 4:
-      oled_write_P(PSTR("<< EXTRA >>"), false);
-      break;
-    case 16:
-      oled_write_P(PSTR("<< ADJUST >>"), false);
-      break;
-    default:
-      // Or use the write_ln shortcut over adding '\n' to the end of your string
-      oled_write_ln_P(PSTR("WTF?"), false);
-  }
-}
-
-
-static void render_logo(void) {
-  static const char PROGMEM qmk_logo[] = {
-    0x80,0x81,0x82,0x83,0x84,0x85,0x86,0x87,0x88,0x89,0x8a,0x8b,0x8c,0x8d,0x8e,0x8f,0x90,0x91,0x92,0x93,0x94,
-    0xa0,0xa1,0xa2,0xa3,0xa4,0xa5,0xa6,0xa7,0xa8,0xa9,0xaa,0xab,0xac,0xad,0xae,0xaf,0xb0,0xb1,0xb2,0xb3,0xb4,
-    0xc0,0xc1,0xc2,0xc3,0xc4,0xc5,0xc6,0xc7,0xc8,0xc9,0xca,0xcb,0xcc,0xcd,0xce,0xcf,0xd0,0xd1,0xd2,0xd3,0xd4,0};
-
-  oled_write_P(qmk_logo, false);
-}
-
-oled_rotation_t oled_init_user(oled_rotation_t rotation) {
-  oled_clear();
-  if (!is_master)
-    return OLED_ROTATION_180;  // flips the display 180 degrees if offhand
-  return rotation;
-}
-
-void oled_task_user(void) {
-  // Host Keyboard Layer Status
-  if (is_master) {
-    oled_set_cursor(5, 0);
-    render_status();     // Renders the current keyboard state (layer, lock, caps, scroll, etc)
-    oled_set_cursor(0, 2);
-    oled_write_P(PSTR("--------------------"), false);
-    oled_set_cursor(3, 3);
-    render_mod_status(get_mods() | get_oneshot_mods()); // Renders pressed modifier
-  } else {
-    render_logo();       // Renders a statuc logo
-    oled_scroll_left();  // Turns on scrolling
-  }
-}
+#endif
