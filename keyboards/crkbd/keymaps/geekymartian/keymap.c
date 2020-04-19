@@ -61,10 +61,18 @@ enum custom_keycodes {
   KC_TMUX_EDIT_MODE,
   KC_TMUX_ZOOM,
   KC_TMUX_NEW_TAB,
+  KC_CLOSE_TMUX_PANE,
+  KC_TMUX_COPY_VISUAL_BLOCK,
   KC_SPCT_MAXIMIZE,
   KC_SPCT_LEFT_HALF,
   KC_SPCT_RIGHT_HALF,
-  KC_SCREENSHOT
+  KC_SCREENSHOT,
+  KC_CYCLE_FOCUS_CLOCKWISE,
+  KC_CYCLE_FOCUS_COUNTER_CLOCKWISE,
+  KC_CYCLE_FOCUS_WINDOW,
+  KC_CYCLE_WINDOW_LAYOUT,
+  KC_CYCLE_WINDOW_LOCATION,
+  KC_MOVE_WINDOW_TO_NEXT_SCREEN
 };
 
 
@@ -85,7 +93,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //|------+------+------+------+------+------|                |------+------+------+------+------+------|
       SFT_T(KC_ESC),SFT_T(KC_A), S, D,F,  G,                      H,     J,     K,     L,  SFT_T(KC_SCLN),  SFT_T(KC_QUOTE),
   //|------+------+------+------+------+------|                |------+------+------+------+------+------|
-      LCTL,     Z,     X,     C,     V,     B,                      N,     M,  COMM,   DOT,  SLSH,  RSFT,\
+      LCTL,     Z,     X,     C,     V,     B,                      N,     M,  COMM,   DOT,  SLSH,  LALT,\
   //|------+------+------+------+------+------+------|  |------+------+------+------+------+------+------|
                                   RGUI, SPC, LOWER,      RAISE, ENT,  MO(_EXTRA) \
                               //`--------------------'  `--------------------'
@@ -95,9 +103,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //,-----------------------------------------.                                  ,-----------------------------------------.
       TAB,      1,     2,     3,     4,     5,                                        6,     7,     8,     9,     0,  BSPC,\
   //|--------+------+------+------+------+------|                                  |------+------+------+------+------+------|
-      SFT_T(KC_ESC),    VIM_PREV_TAB,  VIM_NEW_TAB, VIM_H_SPLIT,  VIM_V_SPLIT,  VIM_SAVE, VIM_PANE_LEFT,  VIM_PANE_DOWN,  VIM_PANE_UP,  VIM_PANE_RIGHT,  VIM_NEXT_TAB, XX,\
+      VIM_PREV_TAB, VIM_PREV_TAB,  VIM_NEW_TAB, VIM_H_SPLIT,  VIM_V_SPLIT,  VIM_SAVE, VIM_PANE_LEFT,  VIM_PANE_DOWN,  VIM_PANE_UP,  VIM_PANE_RIGHT,  VIM_NEXT_TAB, VIM_NEXT_TAB,\
   //|--------+------+------+------+------+------|                                  |------+------+------+------+------+------|
-      LCTL,   TMUX_PREV_TAB, TMUX_ZOOM,   TMUX_H_SPLIT, TMUX_V_SPLIT, TMUX_EDIT_MODE,  TMUX_PANE_LEFT, TMUX_PANE_DOWN, TMUX_PANE_UP, TMUX_PANE_RIGHT, TMUX_NEXT_TAB, XX,\
+     TMUX_PREV_TAB,   TMUX_PREV_TAB, TMUX_ZOOM,   TMUX_H_SPLIT, TMUX_V_SPLIT, TMUX_EDIT_MODE,  TMUX_PANE_LEFT, TMUX_PANE_DOWN, TMUX_PANE_UP, TMUX_PANE_RIGHT, TMUX_NEXT_TAB, TMUX_NEXT_TAB,\
   //|------+------+------+------+------+------+------|  |------+------+------+------+------+------+------|
                                   RGUI, SPC, LOWER,      RAISE, ENT,  MO(_EXTRA) \
                               //`--------------------'  `--------------------'
@@ -105,11 +113,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
   [_RAISE] = LAYOUT_kc( \
   //,-----------------------------------------.                ,-----------------------------------------.
-      TAB,  XX   ,  AT  , LCBR , RCBR , PIPE ,                 GRAVE, EXCLAIM, MINUS,  EQUAL,  XX, BSPC, \
+      TAB,  XX   ,  AT  , LCBR , RCBR , PIPE ,                 GRAVE, EXCLAIM, MINUS, EQUAL,  PLUS, BSPC, \
   //|------------+------+------+------+------|                |------+------+------+------+------+------|
-      SFT_T(KC_ESC), LSFT, TILD,  LPRN, RPRN, UNDS,                              LEFT,  DOWN,  UP,    RGHT,  QUOTE , XX, \
+      ESC, LSFT  , TILD ,  LPRN, RPRN, UNDS,                    LEFT,  DOWN,  UP,    RGHT,  QUOTE , XX, \
   //|------------+------+------+------+------|                |------+------+------+------+------+------|
-      LCTL, ASTERISK , HASH, LBRC, RBRC, AMPR,                          PERCENT, BSLASH,  DOLLAR, PLUS ,  COLON,XX, \
+      LCTL, ASTERISK , HASH, LBRC, RBRC, AMPR,                  PERCENT, BSLASH,  DOLLAR, PLUS ,  COLON,XX, \
   //|------+------+------+------+------+------+------|  |------+------+------+------+------+------+------|
                                   RGUI, SPC, LOWER,      RAISE, ENT,  MO(_EXTRA) \
                               //`--------------------'  `--------------------'
@@ -119,9 +127,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //,-----------------------------------------.                ,-----------------------------------------.
       SPCT_LEFT_HALF, XX, XX, SPCT_MAXIMIZE,  XX, SPCT_RIGHT_HALF,VIM_OPEN_FOLDS, VIM_PASTE_LAST_REGISTER, VIM_COPY_FILE_PATH, VIM_EQUALIZE_PANES, VIM_TOGGLE_COMMENT,  XX,\
   //|------+------+------+------+------+------|                |------+------+------+------+------+------|
-      XX   , XX   , XX   , XX   , XX   ,  XX  ,                   XX  ,  XX  ,  XX  ,  XX  , XX , XX ,\
+      CLOSE_TMUX_PANE , XX , XX , XX, XX, XX  ,                  SCREENSHOT  ,  XX  ,  XX  ,  XX  , XX , TMUX_NEW_TAB ,\
   //|------+------+------+------+------+------|                |------+------+------+------+------+h------|
-      XX   , XX   , XX   , XX   , XX   ,  XX  ,                   XX  ,  XX  ,  XX  ,  XX  , XX , XX ,\
+      XX   , XX  , XX   , TMUX_COPY_VISUAL_BLOCK , XX   ,  XX  ,  XX  ,  XX  ,  XX  ,  XX  , XX , XX ,\
   //|------+------+------+------+------+------+------|  |------+------+------+------+------+------+------|
                                   RGUI, SPC, LOWER,      RAISE, ENT,  MO(_EXTRA) \
                               //`--------------------'  `--------------------'
@@ -129,11 +137,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
   [_ADJUST] = LAYOUT_kc( \
   //,-----------------------------------------.                ,-----------------------------------------.
-      XX  ,  F1  ,  F2  ,  F3  ,  F4  ,  F5  ,                  F6,    F7,   F8,   F9,    F10, XX,\
+      MOVE_WINDOW_TO_NEXT_SCREEN  ,  F1  ,  F2  ,  F3  ,  F4  ,  F5  ,                  F6,    F7,   F8,   F9,    F10, XX,\
   //|------+------+------+------+------+------|                |------+------+------+------+------+------|
-      XX   ,  F11 ,  F12 , _MUTE, _VOLDOWN, _VOLUP,                 MS_L,  MS_D, MS_U, MS_R,  WH_U, XX,\
+      CYCLE_FOCUS_CLOCKWISE   ,  F11 ,  F12 , _MUTE, _VOLDOWN, _VOLUP,                 MS_L,  MS_D, MS_U, MS_R,  WH_U, CYCLE_FOCUS_COUNTER_CLOCKWISE,\
   //|------+------+------+------+------+------|                |------+------+------+------+------+------|
-      XX   , XX   ,   XX ,  XX  ,  XX  ,  XX  ,                  MRWD, MFFD, MPLY, SCREENSHOT , WH_D, XX,\
+      CYCLE_WINDOW_LAYOUT , XX , XX ,XX, XX,  CYCLE_FOCUS_WINDOW  ,  MRWD, MFFD, MPLY, SCREENSHOT , WH_D, CYCLE_WINDOW_LOCATION,\
   //|------+------+------+------+------+------+------|  |------+------+------+------+------+------+------|
                                  RST,      XX,   XX,        XX,     XX,    XX \
                               //`--------------------'  `--------------------'
@@ -192,6 +200,18 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     case KC_TMUX_EDIT_MODE:
       if (record->event.pressed) {
         SEND_STRING("`[");
+      }
+      return false;
+      break;
+    case KC_TMUX_COPY_VISUAL_BLOCK:
+      if (record->event.pressed) {
+        SEND_STRING(SS_LCTRL("v")SS_TAP(X_SPACE));
+      }
+      return false;
+      break;
+    case KC_CLOSE_TMUX_PANE:
+      if (record->event.pressed) {
+        SEND_STRING("`xy"SS_TAP(X_ENTER));
       }
       return false;
       break;
@@ -379,6 +399,42 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     case KC_SCREENSHOT:
       if (record->event.pressed) {
         SEND_STRING(SS_LCTRL(SS_LGUI("s")));
+      }
+      return false;
+      break;
+    case KC_CYCLE_FOCUS_CLOCKWISE:
+      if (record->event.pressed) {
+        SEND_STRING(SS_LALT(SS_LSFT("p")));
+      }
+      return false;
+      break;
+    case KC_CYCLE_FOCUS_COUNTER_CLOCKWISE:
+      if (record->event.pressed) {
+        SEND_STRING(SS_LALT(SS_LSFT("n")));
+      }
+      return false;
+      break;
+    case KC_CYCLE_FOCUS_WINDOW:
+      if (record->event.pressed) {
+        SEND_STRING(SS_LALT(SS_LSFT("k")));
+      }
+      return false;
+      break;
+    case KC_CYCLE_WINDOW_LAYOUT:
+      if (record->event.pressed) {
+        SEND_STRING(SS_LALT(SS_LSFT(SS_TAP(X_SPACE))));
+      }
+      return false;
+      break;
+    case KC_CYCLE_WINDOW_LOCATION:
+      if (record->event.pressed) {
+        SEND_STRING(SS_LALT(SS_LSFT(SS_LCTRL("k"))));
+      }
+      return false;
+      break;
+    case KC_MOVE_WINDOW_TO_NEXT_SCREEN:
+      if (record->event.pressed) {
+        SEND_STRING(SS_LALT(SS_LSFT(SS_LCTRL("h"))));
       }
       return false;
       break;
