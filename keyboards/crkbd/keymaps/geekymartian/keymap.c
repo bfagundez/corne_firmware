@@ -428,7 +428,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
       break;
     case KC_CYCLE_WINDOW_LOCATION:
       if (record->event.pressed) {
-        SEND_STRING(SS_LALT(SS_LSFT(SS_LCTRL("k"))));
+        SEND_STRING(SS_LALT(SS_LSFT(SS_LCTRL("h"))));
       }
       return false;
       break;
